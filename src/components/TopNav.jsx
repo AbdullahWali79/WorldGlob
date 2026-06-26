@@ -17,6 +17,7 @@ import Fuse from 'fuse.js';
 export default function TopNav({
   route,
   onSelectRouteCountry,
+  onSwapRoute,
   searchResults,
   autoRotate,
   setAutoRotate,
@@ -66,7 +67,7 @@ export default function TopNav({
             </div>
           </div>
 
-          <div className="grid flex-1 gap-3 xl:grid-cols-[1fr_auto_1fr]">
+          <div className="grid flex-1 items-center gap-3 xl:grid-cols-[1fr_auto_1fr]">
             <RouteSearchField
               label="From"
               value={fromQuery}
@@ -81,9 +82,7 @@ export default function TopNav({
               }}
             />
 
-            <div className="hidden items-center justify-center text-slate-500 xl:flex">
-              <ArrowRightLeft className="h-4 w-4" />
-            </div>
+            <SwapRouteButton onClick={onSwapRoute} />
 
             <RouteSearchField
               label="To"
@@ -165,6 +164,20 @@ function RouteSearchField({ label, value, matches, active, onFocus, onChange, on
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function SwapRouteButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-cyan-300/30 hover:bg-cyan-400/10 hover:text-cyan-100"
+      aria-label="Swap from and to countries"
+      title="Swap route"
+    >
+      <ArrowRightLeft className="h-4 w-4 transition duration-300 group-hover:rotate-180" />
+    </button>
   );
 }
 

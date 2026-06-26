@@ -108,6 +108,14 @@ export default function App() {
     focusCountry(name, { ...options, openSpotlight: true });
   }
 
+  function swapRouteCountries() {
+    const nextRoute = { from: route.to, to: route.from };
+    setRoute(nextRoute);
+    if (nextRoute.from) {
+      focusCountry(nextRoute.from, { flyDuration: 1400, openSpotlight: true });
+    }
+  }
+
   function handleScreenshot() {
     try {
       const canvas = document.querySelector('canvas');
@@ -164,6 +172,7 @@ export default function App() {
       <TopNav
         route={route}
         onSelectRouteCountry={selectRouteCountry}
+        onSwapRoute={swapRouteCountries}
         searchResults={searchableCountries}
         autoRotate={autoRotate}
         setAutoRotate={setAutoRotate}
