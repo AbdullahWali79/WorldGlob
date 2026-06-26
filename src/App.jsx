@@ -14,6 +14,7 @@ const GlobeScene = React.lazy(() => import('./components/GlobeScene'));
 const DEFAULT_COUNTRY = 'Pakistan';
 
 export default function App() {
+  const appShellRef = useRef(null);
   const globeRef = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(countryLookup[DEFAULT_COUNTRY]);
   const [hoveredCountry, setHoveredCountry] = useState(null);
@@ -25,10 +26,22 @@ export default function App() {
   const [routeData, setRouteData] = useState(null);
   const [tooltip, setTooltip] = useState(null);
   const [countrySpotlightOpen, setCountrySpotlightOpen] = useLocalStorage('wge-country-spotlight', true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useLocalStorage('wge-left-sidebar-collapsed', false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useLocalStorage('wge-right-sidebar-collapsed', false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    syncFullscreen();
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
 
   useEffect(() => {
     const initialCountry = new URL(window.location.href).searchParams.get('country');
@@ -110,6 +123,18 @@ export default function App() {
     navigator.clipboard?.writeText(url.toString()).catch(() => {});
   }
 
+  function handleFullscreen() {
+    const target = appShellRef.current;
+    if (!target) return;
+    if (!document.fullscreenElement) {
+      target.requestFullscreen?.().catch(() => {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      });
+      return;
+    }
+    document.exitFullscreen?.().catch(() => {});
+  }
+
   const bottomStats = useMemo(() => {
     const coords = selectedMeta?.coordinates || [0, 0];
     return {
@@ -123,7 +148,12 @@ export default function App() {
   }, [selectedMeta, selectedCountry]);
 
   return (
-    <div className="min-h-screen overflow-hidden bg-space-gradient text-slate-100">
+    <div
+      ref={appShellRef}
+      className={`min-h-screen overflow-hidden bg-space-gradient text-slate-100 ${
+        isFullscreen ? 'fixed inset-0 z-[100] h-screen w-screen' : ''
+      }`}
+    >
       <SpaceBackdrop />
       <TopNav
         route={route}
@@ -136,12 +166,18 @@ export default function App() {
         onScreenshot={handleScreenshot}
         onShare={handleShare}
         onSettings={() => {}}
-        onFullscreen={() => document.documentElement.requestFullscreen?.()}
+        onFullscreen={handleFullscreen}
         onSelectCountry={focusCountry}
       />
 
-      <main className="relative mx-auto flex min-h-[calc(100vh-72px)] max-w-[1920px] gap-4 px-3 pb-3 pt-3 lg:px-5">
+      <main
+        className={`relative mx-auto flex min-h-[calc(100vh-72px)] gap-4 px-3 pb-3 pt-3 lg:px-5 ${
+          isFullscreen ? 'max-w-none' : 'max-w-[1920px]'
+        }`}
+      >
         <LeftSidebar
+          collapsed={leftSidebarCollapsed}
+          onToggleCollapse={() => setLeftSidebarCollapsed((value) => !value)}
           bookmarks={bookmarks}
           history={history}
           selectedCountry={selectedCountry}
@@ -149,9 +185,17 @@ export default function App() {
           onToggleBookmark={toggleBookmark}
         />
 
-        <section className="relative flex min-h-[calc(100vh-96px)] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+        <section
+          className={`relative flex min-h-[calc(100vh-96px)] flex-1 flex-col overflow-hidden border border-white/10 bg-white/5 shadow-2xl shadow-black/40 backdrop-blur-2xl ${
+            isFullscreen ? 'rounded-none' : 'rounded-[32px]'
+          }`}
+        >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.08),transparent_30%)]" />
-          <div className="relative grid flex-1 grid-cols-1 lg:grid-cols-[1fr_360px]">
+          <div
+            className={`relative grid flex-1 grid-cols-1 ${
+              rightSidebarCollapsed ? 'lg:grid-cols-[1fr_76px]' : 'lg:grid-cols-[1fr_360px]'
+            }`}
+          >
             <div className="relative min-h-[70vh]">
               <Suspense fallback={<GlobeLoading />}>
                 <GlobeScene
@@ -168,17 +212,19 @@ export default function App() {
             </div>
 
             <div className="relative border-t border-white/10 bg-black/20 lg:border-l lg:border-t-0">
-          <CountryPanel
-            country={selectedCountry}
-            selectedMeta={selectedMeta}
-            bookmarks={bookmarks}
-            onToggleBookmark={toggleBookmark}
-            onSelectCountry={focusCountry}
-            onSetRouteFrom={() => setRouteFromSelected('from')}
-            onSetRouteTo={() => setRouteFromSelected('to')}
-          />
-        </div>
-      </div>
+              <CountryPanel
+                collapsed={rightSidebarCollapsed}
+                onToggleCollapse={() => setRightSidebarCollapsed((value) => !value)}
+                country={selectedCountry}
+                selectedMeta={selectedMeta}
+                bookmarks={bookmarks}
+                onToggleBookmark={toggleBookmark}
+                onSelectCountry={focusCountry}
+                onSetRouteFrom={() => setRouteFromSelected('from')}
+                onSetRouteTo={() => setRouteFromSelected('to')}
+              />
+            </div>
+          </div>
 
           <DistanceExplorer
             route={route}
