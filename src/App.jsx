@@ -27,8 +27,8 @@ export default function App() {
   const [tooltip, setTooltip] = useState(null);
   const [countrySpotlightOpen, setCountrySpotlightOpen] = useLocalStorage('wge-country-spotlight', true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useLocalStorage('wge-left-sidebar-collapsed', false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useLocalStorage('wge-right-sidebar-collapsed', false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useLocalStorage('wge-left-sidebar-collapsed', true);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useLocalStorage('wge-right-sidebar-collapsed', true);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -42,6 +42,12 @@ export default function App() {
     syncFullscreen();
     return () => document.removeEventListener('fullscreenchange', syncFullscreen);
   }, []);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    setLeftSidebarCollapsed(true);
+    setRightSidebarCollapsed(true);
+  }, [isFullscreen, setLeftSidebarCollapsed, setRightSidebarCollapsed]);
 
   useEffect(() => {
     const initialCountry = new URL(window.location.href).searchParams.get('country');
@@ -172,7 +178,7 @@ export default function App() {
 
       <main
         className={`relative mx-auto flex min-h-[calc(100vh-72px)] gap-4 px-3 pb-3 pt-3 lg:px-5 ${
-          isFullscreen ? 'max-w-none' : 'max-w-[1920px]'
+          isFullscreen ? 'max-w-none gap-2 px-2 pb-2 pt-2' : 'max-w-[1920px]'
         }`}
       >
         <LeftSidebar
