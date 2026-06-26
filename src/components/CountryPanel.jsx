@@ -2,7 +2,14 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Flag, Globe, MapPinned, Map, ThermometerSun, TimerReset, Clock3, SquareStack, BookOpen } from 'lucide-react';
 
-export default function CountryPanel({ country, selectedMeta, bookmarks, onToggleBookmark }) {
+export default function CountryPanel({
+  country,
+  selectedMeta,
+  bookmarks,
+  onToggleBookmark,
+  onSetRouteFrom,
+  onSetRouteTo
+}) {
   if (!country || !selectedMeta) return null;
 
   const fields = [
@@ -43,6 +50,21 @@ export default function CountryPanel({ country, selectedMeta, bookmarks, onToggl
           >
             {bookmarks.includes(selectedMeta.name) ? 'Remove Bookmark' : 'Save Bookmark'}
           </button>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              onClick={onSetRouteFrom}
+              className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/15"
+            >
+              Set as From
+            </button>
+            <button
+              onClick={onSetRouteTo}
+              className="rounded-2xl border border-blue-300/20 bg-blue-400/10 px-4 py-3 text-sm font-medium text-blue-100 transition hover:bg-blue-400/15"
+            >
+              Set as To
+            </button>
+          </div>
 
           <div className="mt-6 grid gap-3">
             {fields.map((field) => (

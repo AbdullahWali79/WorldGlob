@@ -146,6 +146,7 @@ function normalizeWorldCountry(country) {
     search: `${name} ${capital} ${continent} ${country?.subregion || ''}`.trim(),
     iso2: country?.cca2,
     iso3: country?.cca3,
+    ccn3: country?.ccn3,
     geometry: country?.geometry
   };
 }
@@ -155,6 +156,12 @@ const worldCountryLookup = Object.fromEntries(
     const normalized = normalizeWorldCountry(country);
     return [normalized.name, normalized];
   })
+);
+
+export const countryLookupById = Object.fromEntries(
+  Object.values(worldCountryLookup)
+    .filter((entry) => entry.ccn3)
+    .map((entry) => [entry.ccn3, entry])
 );
 
 export const countryLookup = Object.fromEntries(

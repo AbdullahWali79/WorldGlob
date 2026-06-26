@@ -3,6 +3,7 @@ import TopNav from './components/TopNav';
 import LeftSidebar from './components/LeftSidebar';
 import BottomPanel from './components/BottomPanel';
 import CountryPanel from './components/CountryPanel';
+import CountrySpotlight from './components/CountrySpotlight';
 import DistanceExplorer from './components/DistanceExplorer';
 import SpaceBackdrop from './components/SpaceBackdrop';
 import { countryProfiles, countryLookup, searchableCountries } from './data/countries';
@@ -25,12 +26,23 @@ export default function App() {
   const [route, setRoute] = useState({ from: 'Pakistan', to: 'United States' });
   const [routeData, setRouteData] = useState(null);
   const [tooltip, setTooltip] = useState(null);
+  const [countrySpotlightOpen, setCountrySpotlightOpen] = useLocalStorage('wge-country-spotlight', true);
 
   const debouncedSearch = useDebouncedValue(searchValue, 120);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const initialCountry = new URL(window.location.href).searchParams.get('country');
+    if (initialCountry && countryLookup[initialCountry]) {
+      focusCountry(initialCountry, { flyDuration: 0 });
+      setSearchValue(initialCountry);
+    }
+    // Only run on first mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!route.from || !route.to) {
@@ -59,6 +71,7 @@ export default function App() {
     const country = countryLookup[name];
     if (!country) return;
     setSelectedCountry(country);
+    setCountrySpotlightOpen(options.openSpotlight ?? true);
     setHistory((current) => {
       const next = [name, ...current.filter((item) => item !== name)];
       return next.slice(0, 12);
@@ -74,20 +87,33 @@ export default function App() {
     );
   }
 
+  function setRouteFromSelected(side = 'from') {
+    if (!selectedCountry?.name) return;
+    setRoute((current) => ({
+      ...current,
+      [side]: selectedCountry.name
+    }));
+  }
+
   function handleScreenshot() {
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return;
-    const url = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `world-globe-${Date.now()}.png`;
-    link.click();
+    try {
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `world-globe-${Date.now()}.png`;
+      link.click();
+    } catch {
+      // Canvas export can be blocked if a browser refuses a remote texture.
+      // The button intentionally fails softly rather than breaking the scene.
+    }
   }
 
   function handleShare() {
     const url = new URL(window.location.href);
     if (selectedCountry) url.searchParams.set('country', selectedCountry.name);
-    navigator.clipboard?.writeText(url.toString());
+    navigator.clipboard?.writeText(url.toString()).catch(() => {});
   }
 
   const bottomStats = useMemo(() => {
@@ -148,15 +174,17 @@ export default function App() {
             </div>
 
             <div className="relative border-t border-white/10 bg-black/20 lg:border-l lg:border-t-0">
-              <CountryPanel
-                country={selectedCountry}
-                selectedMeta={selectedMeta}
-                bookmarks={bookmarks}
-                onToggleBookmark={toggleBookmark}
-                onSelectCountry={focusCountry}
-              />
-            </div>
-          </div>
+          <CountryPanel
+            country={selectedCountry}
+            selectedMeta={selectedMeta}
+            bookmarks={bookmarks}
+            onToggleBookmark={toggleBookmark}
+            onSelectCountry={focusCountry}
+            onSetRouteFrom={() => setRouteFromSelected('from')}
+            onSetRouteTo={() => setRouteFromSelected('to')}
+          />
+        </div>
+      </div>
 
           <DistanceExplorer
             route={route}
@@ -168,6 +196,17 @@ export default function App() {
           <BottomPanel stats={bottomStats} routeData={routeData} />
         </section>
       </main>
+
+      <CountrySpotlight
+        open={countrySpotlightOpen}
+        country={selectedCountry}
+        selectedMeta={selectedMeta}
+        bookmarked={bookmarks.includes(selectedCountry?.name)}
+        onClose={() => setCountrySpotlightOpen(false)}
+        onToggleBookmark={() => toggleBookmark(selectedCountry?.name)}
+        onSetRouteFrom={() => setRouteFromSelected('from')}
+        onSetRouteTo={() => setRouteFromSelected('to')}
+      />
 
       <div className="pointer-events-none fixed bottom-5 left-1/2 z-30 -translate-x-1/2">
         <div className="pointer-events-auto rounded-full border border-white/10 bg-black/50 px-4 py-2 text-xs text-slate-300 shadow-xl backdrop-blur-2xl">
