@@ -155,6 +155,36 @@ const GlobeScene = forwardRef(function GlobeScene(
           onTooltip(polygon ? { label: polygon.name } : null);
         }}
         onPolygonClick={(polygon) => onSelectCountry(polygon.name)}
+        labelsData={polygons}
+        labelLat={(label) => label.coordinates[0]}
+        labelLng={(label) => label.coordinates[1]}
+        labelText={(label) => label.name}
+        labelColor={(label) => {
+          if (selectedCountry?.name === label.name) return '#ecfeff';
+          if (hoveredCountry?.name === label.name) return '#ffffff';
+          return 'rgba(226, 232, 240, 0.72)';
+        }}
+        labelAltitude={0.025}
+        labelSize={(label) => {
+          if (selectedCountry?.name === label.name) return 0.95;
+          if (hoveredCountry?.name === label.name) return 0.82;
+          return 0.6;
+        }}
+        labelResolution={2}
+        labelIncludeDot={false}
+        labelsTransitionDuration={300}
+        onLabelClick={(label) => {
+          onSelectCountry(label.name);
+        }}
+        onLabelHover={(label) => {
+          if (label) {
+            onHoverCountry(label);
+            onTooltip({ label: label.name });
+            return;
+          }
+          onHoverCountry(null);
+          onTooltip(null);
+        }}
         arcsData={arcs}
         arcColor={(arc) => arc.color}
         arcStroke={0.5}
