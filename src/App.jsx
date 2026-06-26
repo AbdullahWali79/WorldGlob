@@ -9,7 +9,6 @@ import SpaceBackdrop from './components/SpaceBackdrop';
 import { countryProfiles, countryLookup, searchableCountries } from './data/countries';
 import { computeRoute, formatCoordinates } from './utils/geo';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { useDebouncedValue } from './hooks/useDebouncedValue';
 const GlobeScene = React.lazy(() => import('./components/GlobeScene'));
 
 const DEFAULT_COUNTRY = 'Pakistan';
@@ -18,7 +17,6 @@ export default function App() {
   const globeRef = useRef(null);
   const [selectedCountry, setSelectedCountry] = useState(countryLookup[DEFAULT_COUNTRY]);
   const [hoveredCountry, setHoveredCountry] = useState(null);
-  const [searchValue, setSearchValue] = useState('');
   const [autoRotate, setAutoRotate] = useLocalStorage('wge-auto-rotate', true);
   const [darkMode, setDarkMode] = useLocalStorage('wge-dark-mode', true);
   const [bookmarks, setBookmarks] = useLocalStorage('wge-bookmarks', []);
@@ -28,8 +26,6 @@ export default function App() {
   const [tooltip, setTooltip] = useState(null);
   const [countrySpotlightOpen, setCountrySpotlightOpen] = useLocalStorage('wge-country-spotlight', true);
 
-  const debouncedSearch = useDebouncedValue(searchValue, 120);
-
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
@@ -38,7 +34,6 @@ export default function App() {
     const initialCountry = new URL(window.location.href).searchParams.get('country');
     if (initialCountry && countryLookup[initialCountry]) {
       focusCountry(initialCountry, { flyDuration: 0 });
-      setSearchValue(initialCountry);
     }
     // Only run on first mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,14 +46,6 @@ export default function App() {
     }
     setRouteData(computeRoute(route.from, route.to));
   }, [route]);
-
-  useEffect(() => {
-    if (!debouncedSearch) return;
-    const match = searchableCountries.find((entry) => entry.name.toLowerCase() === debouncedSearch.toLowerCase());
-    if (match) {
-      focusCountry(match.name, { fromSearch: true });
-    }
-  }, [debouncedSearch]);
 
   const selectedMeta = selectedCountry
     ? {
@@ -93,6 +80,13 @@ export default function App() {
       ...current,
       [side]: selectedCountry.name
     }));
+  }
+
+  function selectRouteCountry(side, name, options = {}) {
+    const country = countryLookup[name];
+    if (!country) return;
+    setRoute((current) => ({ ...current, [side]: name }));
+    focusCountry(name, { ...options, openSpotlight: true });
   }
 
   function handleScreenshot() {
@@ -132,8 +126,8 @@ export default function App() {
     <div className="min-h-screen overflow-hidden bg-space-gradient text-slate-100">
       <SpaceBackdrop />
       <TopNav
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
+        route={route}
+        onSelectRouteCountry={selectRouteCountry}
         searchResults={searchableCountries}
         autoRotate={autoRotate}
         setAutoRotate={setAutoRotate}

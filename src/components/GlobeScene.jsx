@@ -6,7 +6,7 @@ import { feature } from 'topojson-client';
 import countriesTopo from 'world-atlas/countries-110m.json';
 import { countryLookupById } from '../data/countries';
 
-const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-dark.jpg';
+const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
 const EARTH_BUMPS = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
 const CLOUDS = 'https://unpkg.com/three-globe/example/img/earth-clouds.png';
 
@@ -117,8 +117,8 @@ const GlobeScene = forwardRef(function GlobeScene(
       bumpImageUrl: EARTH_BUMPS,
       backgroundImageUrl: null,
       showAtmosphere: true,
-      atmosphereColor: '#7dd3fc',
-      atmosphereAltitude: 0.22
+      atmosphereColor: '#9be7ff',
+      atmosphereAltitude: 0.27
     }),
     []
   );
@@ -139,15 +139,15 @@ const GlobeScene = forwardRef(function GlobeScene(
           return 0.01;
         }}
         polygonCapColor={(polygon) => {
-          if (selectedCountry?.name === polygon.name) return 'rgba(56, 189, 248, 0.48)';
-          if (hoveredCountry?.name === polygon.name) return 'rgba(125, 211, 252, 0.32)';
-          return 'rgba(255,255,255,0.04)';
+          if (selectedCountry?.name === polygon.name) return 'rgba(56, 189, 248, 0.5)';
+          if (hoveredCountry?.name === polygon.name) return 'rgba(125, 211, 252, 0.34)';
+          return 'rgba(255,255,255,0.02)';
         }}
-        polygonSideColor={() => 'rgba(12, 18, 35, 0.42)'}
+        polygonSideColor={() => 'rgba(16, 24, 44, 0.36)'}
         polygonStrokeColor={(polygon) => {
           if (selectedCountry?.name === polygon.name) return '#7dd3fc';
           if (hoveredCountry?.name === polygon.name) return '#c4f1ff';
-          return 'rgba(255,255,255,0.08)';
+          return 'rgba(255,255,255,0.12)';
         }}
         polygonLabel={(polygon) => polygon.name}
         onPolygonHover={(polygon) => {
@@ -158,7 +158,7 @@ const GlobeScene = forwardRef(function GlobeScene(
         arcsData={arcs}
         arcColor={(arc) => arc.color}
         arcStroke={0.5}
-        arcAltitude={0.24}
+        arcAltitude={0.26}
         arcDashLength={(arc) => arc.dashLength}
         arcDashGap={(arc) => arc.dashGap}
         arcDashInitialGap={(arc) => arc.dashInitialGap}
@@ -173,7 +173,7 @@ const GlobeScene = forwardRef(function GlobeScene(
             new THREE.MeshPhongMaterial({
               map: cloudTexture,
               transparent: true,
-              opacity: 0.42,
+              opacity: 0.36,
               depthWrite: false
             })
           )
